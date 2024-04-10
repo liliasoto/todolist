@@ -1,12 +1,15 @@
 import React, {useState,useEffect} from "react"; //Se importan React, useState y useEffect desde el módulo "react" para poder usar estados
 import "./App.css";
+
+const ThemeContext = React.createContext();
+
 const App = () => {
   //A continuación se utilizan los hooks useState para definir dos estados
   //El estado todos almacena la lista de tareas
   const [todos, setTodos] = useState([]);
   //El estado todoEditing almacena el ID de la tarea que se está editando actualmente
   const [todoEditing, setTodoEditing] = useState(null);
-
+  const [theme, setTheme] = useState("light");
   //El siguiente useEffect es para cargar las tareas almacenadas en el almacenamiento local cuando se monta el componente por primera vez
   useEffect(() => {
     const json = localStorage.getItem("todos");
@@ -79,50 +82,58 @@ const App = () => {
       setTodoEditing(null); //se llama a setTodoEditing para restablecer el estado todoEditing a null, lo que indica que ya no se está editando ninguna tarea
     }
   
-return(
-  <div id="todo-list">
-  <h1>Todo List</h1>
-  <form onSubmit={handleSubmit}>
-    <input
-      type="text"
-      id = 'todoAdd'
-    />
-    <button type="submit">Add Todo</button>
-  </form>
-{todos.map((todo) => (
-  <div key={todo.id} className="todo">
-    <div className="todo-text">
-      {/* Add checkbox for toggle complete */}
-      <input
-        type="checkbox"
-        id="completed"
-        checked={todo.completed}
-        onChange={() => toggleComplete(todo.id)}
-      />
-      {/* if it is edit mode, display input box, else display text */}
-      {todo.id === todoEditing ?
-        (<input
-          type="text"
-          id = {todo.id}
-          defaultValue={todo.text}
-        />) :
-        (<div>{todo.text}</div>)
-      }
-    </div>
-    <div className="todo-actions">
-      {/* if it is edit mode, allow submit edit, else allow edit */}
-      {todo.id === todoEditing ?
-      (
-        <button onClick={() => submitEdits(todo)}>Submit Edits</button>
-      ) :
-      (
-        <button onClick={() => setTodoEditing(todo.id)}>Edit</button>
-      )}
-      <button onClick={() => deleteTodo(todo.id)}>Delete</button>
-     </div>
-  </div>
-))}
-</div>
-);
+    return (
+      <ThemeContext.Provider value={theme}>
+        <div id="todo-list" className={theme}>
+        <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+            Cambiar tema
+          </button>
+          <h1>Todo List</h1>
+          <form onSubmit={handleSubmit}>
+            <input type="text" id="todoAdd" />
+            <button type="submit">Add Todo</button>
+          </form>
+          {todos.map((todo) => (
+            <div key={todo.id} className="todo">
+              <div className="todo-text">
+                <input
+                  type="checkbox"
+                  id="completed"
+                  checked={todo.completed}
+                  onChange={() => toggleComplete(todo.id)}
+                />
+                {todo.id === todoEditing ? (
+                  <input
+                    type="text"
+                    id={todo.id}
+                    defaultValue={todo.text}
+                  />
+                ) : (
+                  <div>{todo.text}</div>
+                )}
+              </div>
+              <div className="todo-actions">
+                {todo.id === todoEditing ? (
+                  <button onClick={() => submitEdits(todo)}>Submit Edits</button>
+                ) : (
+                  <button onClick={() => setTodoEditing(todo.id)}>Edit</button>
+                )}
+                <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ThemeContext.Provider>
+    );
 };
-export default App;
+
+const ThemeWrapper = () => {
+  return (
+    <ThemeContext.Consumer>
+      {(theme) => <App theme={theme} />}
+    </ThemeContext.Consumer>
+  );
+};
+
+export default ThemeWrapper;
+//export default App;
